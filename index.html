@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101713">
+  <title>Eaglercraft — Browser Launcher</title>
+  <style>
+    :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #101713; color: #f2f5ef; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: radial-gradient(ellipse at 50% 5%, #26382b 0, #17221b 35%, #101713 75%); }
+    button, a, select { font: inherit; }
+    .topbar { min-height: 68px; display: flex; align-items: center; justify-content: space-between; gap: 22px; padding: 10px clamp(18px, 4vw, 54px); border-bottom: 1px solid #ffffff14; background: #101713aa; }
+    .brand { display: flex; align-items: center; gap: 12px; font-weight: 750; letter-spacing: .01em; }
+    .mark { display: grid; place-items: center; width: 32px; height: 32px; border: 1px solid #8fbe77; background: linear-gradient(145deg,#a5d889 0 48%,#699653 49%); color: #152015; font-size: 18px; box-shadow: 3px 3px 0 #273a27; }
+    .main-nav { display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .nav-button { min-height: 38px; padding: 0 13px; border: 1px solid transparent; border-radius: 8px; background: transparent; color: #b5c1b1; font-weight: 650; cursor: pointer; }
+    .nav-button:hover { color: #f2f5ef; background: #ffffff0a; }
+    .nav-button[aria-current="page"] { border-color: #a9d68545; background: #a9d68513; color: #d8efc8; }
+    .status { color: #b5c1b1; font-size: 13px; }
+    .content-view { min-height: calc(100vh - 68px); padding: clamp(34px, 6vh, 68px) clamp(18px, 5vw, 64px); }
+    .page-shell { width: min(1120px, 100%); margin: 0 auto; }
+    .page-heading { margin-bottom: 28px; }
+    .page-heading h1 { margin: 16px 0 10px; font-size: clamp(36px, 5vw, 54px); }
+    .page-heading p { max-width: 650px; margin: 0; color: #aebbac; line-height: 1.65; }
+    .server-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+    .server-card { overflow: hidden; border: 1px solid #ffffff20; border-radius: 17px; background: #151b17; box-shadow: 0 20px 48px #0003; }
+    .server-banner { position: relative; min-height: 170px; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; padding: 20px 22px; isolation: isolate; }
+    .server-banner::before, .server-banner::after { position: absolute; z-index: -1; content: ""; }
+    .server-banner::before { width: 230px; height: 230px; right: -24px; top: -100px; border: 1px solid #ffffff26; border-radius: 36px; transform: rotate(28deg); box-shadow: 0 0 0 18px #ffffff08, 0 0 0 38px #ffffff06; }
+    .server-banner::after { width: 130px; height: 130px; right: 29%; bottom: -94px; border: 1px solid #ffffff22; border-radius: 50%; box-shadow: 0 0 0 16px #ffffff08; }
+    .server-banner.bagel { background: radial-gradient(ellipse at 83% 30%, #b65d1e 0, transparent 36%), linear-gradient(120deg, #27231c, #4d321f 50%, #122a2b); }
+    .server-banner.voidsent { background: radial-gradient(ellipse at 82% 24%, #7129a8 0, transparent 35%), linear-gradient(120deg, #17131f, #352145 54%, #171c2a); }
+    .banner-kicker { color: #e2d5b7; font-size: 11px; font-weight: 750; letter-spacing: .18em; text-transform: uppercase; }
+    .banner-wordmark { max-width: 75%; color: #fff5df; font-size: clamp(32px, 5vw, 48px); font-weight: 950; letter-spacing: -.07em; line-height: .95; text-shadow: 2px 3px 0 #1a120d; }
+    .banner-wordmark span { display: block; margin-top: 7px; color: #ffbd5c; font-size: .45em; letter-spacing: .2em; }
+    .voidsent .banner-wordmark { color: #f5ecff; }
+    .voidsent .banner-wordmark span { color: #ce8bff; }
+    .banner-stamp { position: absolute; right: 22px; bottom: 21px; display: grid; place-items: center; width: 58px; height: 58px; border: 1px solid #ffffff55; border-radius: 17px; background: #10171380; color: #f7dfb1; font-size: 25px; font-weight: 900; transform: rotate(8deg); }
+    .server-info { padding: 20px 22px 22px; }
+    .server-title-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .server-title-row h2 { margin: 0; font-size: 21px; }
+    .server-tag { padding: 5px 9px; border: 1px solid #ffffff20; border-radius: 999px; color: #bac6b7; font-size: 11px; white-space: nowrap; }
+    .server-tag.ccu { border-color: #8dcc6b70; background: #8dcc6b17; color: #b7ed91; font-weight: 800; }
+    .server-description { min-height: 44px; margin: 10px 0 18px; color: #aab6a6; font-size: 13px; line-height: 1.6; }
+    .address-label { display: block; margin-bottom: 7px; color: #839082; font-size: 11px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; }
+    .server-address { overflow-wrap: anywhere; display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 44px; padding: 7px 8px 7px 12px; border: 1px solid #ffffff18; border-radius: 9px; background: #090d0a; color: #e6ece2; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 13px; }
+    .server-address code { overflow-wrap: anywhere; }
+    .copy-button { flex: 0 0 auto; min-height: 32px; padding: 0 10px; border: 1px solid #ffffff24; border-radius: 7px; background: #ffffff0c; color: #e6ece2; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .copy-button:hover { background: #ffffff18; }
+    .server-hint { margin: 20px 0 0; padding: 14px 16px; border-left: 2px solid #a9d685; border-radius: 0 8px 8px 0; background: #a9d6850c; color: #b8c4b4; font-size: 13px; line-height: 1.6; }
+    .request-panel { margin-top: 18px; padding: clamp(18px, 3vw, 26px); border: 1px solid #ffffff20; border-radius: 14px; background: #ffffff06; }
+    .request-panel h2 { margin: 0 0 8px; font-size: 20px; }
+    .request-panel > p { margin: 0 0 18px; color: #aebbac; font-size: 13px; line-height: 1.6; }
+    .request-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .request-field { display: grid; gap: 7px; color: #c6d1c2; font-size: 12px; font-weight: 650; }
+    .request-field input, .request-field textarea { width: 100%; min-height: 43px; padding: 10px 12px; border: 1px solid #ffffff2b; border-radius: 8px; background: #101713; color: #f2f5ef; font: inherit; font-weight: 400; }
+    .request-field textarea { min-height: 88px; resize: vertical; }
+    .request-field input:focus-visible, .request-field textarea:focus-visible { outline: 2px solid #a9d685; outline-offset: 2px; }
+    .request-field.full { grid-column: 1 / -1; }
+    .request-note { margin-top: 12px !important; margin-bottom: 0 !important; color: #839082 !important; font-size: 11px !important; }
+    .legal-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .legal-card { padding: 20px; border: 1px solid #ffffff1c; border-radius: 12px; background: #ffffff06; }
+    .legal-card h2 { margin: 0 0 9px; color: #eaf0e6; font-size: 16px; }
+    .legal-card p { margin: 0; color: #aebbac; font-size: 13px; line-height: 1.7; }
+    .legal-card a { color: #c2e8a8; text-underline-offset: 3px; }
+    .legal-callout { grid-column: 1 / -1; border-color: #e1ad6940; background: #e1ad690b; }
+    .legal-callout h2 { color: #f1cf9b; }
+    .welcome { min-height: calc(100vh - 68px); display: grid; place-items: center; padding: clamp(28px, 6vh, 72px) clamp(18px, 4vw, 54px); }
+    .card { width: min(1120px, 100%); display: grid; grid-template-columns: minmax(0, .78fr) minmax(0, 1.22fr); align-items: center; gap: clamp(36px, 6vw, 84px); }
+    .eyebrow { display: inline-flex; align-items: center; gap: 8px; color: #bfdaa9; background: #a9d68516; border: 1px solid #a9d68538; border-radius: 999px; padding: 8px 13px; font-size: 12px; letter-spacing: .11em; text-transform: uppercase; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: #a8d77e; box-shadow: 0 0 12px #a8d77e; }
+    h1 { margin: 22px 0 12px; font-size: clamp(42px, 6vw, 70px); line-height: .98; letter-spacing: -.055em; }
+    .intro { max-width: 440px; margin: 0; color: #b6c0b5; font-size: 16px; line-height: 1.65; }
+    .selector-panel { padding: clamp(16px, 2.4vw, 26px); border: 1px solid #ffffff20; border-radius: 16px; background: linear-gradient(145deg,#ffffff0b,#ffffff04); box-shadow: 0 24px 70px #0003; }
+    .version-picker { display: grid; gap: 9px; color: #c6d1c2; font-size: 13px; font-weight: 650; }
+    select { width: 100%; min-height: 46px; padding: 0 38px 0 13px; border: 1px solid #ffffff2b; border-radius: 8px; background: #17211a; color: #f2f5ef; cursor: pointer; }
+    select:focus-visible { outline: 2px solid #a9d685; outline-offset: 2px; }
+    .preview { margin-top: 16px; }
+    .preview-frame { width: 100%; aspect-ratio: 16 / 9; overflow: hidden; display: grid; place-items: center; border: 1px solid #ffffff20; border-radius: 10px; background: #080b09; }
+    .preview-frame img { display: block; width: 100%; height: 100%; object-fit: contain; }
+    .preview-caption { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; margin-top: 11px; }
+    .preview-title { font-weight: 700; color: #eef3eb; }
+    .preview-description { color: #91a08f; font-size: 12px; text-align: right; }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 19px; }
+    .button { min-height: 46px; display: inline-flex; justify-content: center; align-items: center; gap: 9px; border-radius: 8px; padding: 0 16px; text-decoration: none; font-weight: 700; transition: transform .15s ease, background .15s ease, border-color .15s ease; cursor: pointer; }
+    .button:hover { transform: translateY(-2px); }
+    .primary { color: #142012; border: 1px solid #b5e394; background: #a9d685; box-shadow: 0 7px 22px #84ba5e25; }
+    .primary:hover { background: #bce69e; }
+    .secondary { color: #e8eee6; border: 1px solid #ffffff24; background: #ffffff08; }
+    .secondary:hover { background: #ffffff12; border-color: #ffffff40; }
+    .note { margin-top: 13px; color: #859287; font-size: 12px; }
+    .performance-picker { min-width: 0; margin: 16px 0 0; padding: 12px; border: 1px solid #ffffff1c; border-radius: 9px; background: #080b0966; color: #e4ebdf; }
+    .performance-picker legend { padding: 0 5px; color: #e4ebdf; font-size: 13px; font-weight: 700; }
+    .mode-options { display: flex; flex-wrap: wrap; gap: 7px; }
+    .mode-option { flex: 1 1 110px; min-width: 0; display: flex; align-items: center; gap: 8px; padding: 9px; border: 1px solid #ffffff24; border-radius: 8px; background: #ffffff06; color: #dce5d7; font-size: 12px; cursor: pointer; }
+    .mode-option input { appearance: none; position: relative; width: 17px; height: 17px; flex: 0 0 17px; margin: 0; border: 1px solid #8d9a88; border-radius: 4px; background: #111813; cursor: pointer; }
+    .mode-option input:checked { border-color: #a9d685; background: #a9d685; }
+    .mode-option input:checked::after { content: "✓"; position: absolute; inset: -1px 0 0; color: #142012; font-size: 14px; font-weight: 900; line-height: 17px; text-align: center; }
+    .mode-option:has(input:checked) { border-color: #a9d68580; background: #a9d68512; }
+    .performance-picker small { display: block; margin-top: 8px; color: #91a08f; font-size: 11px; line-height: 1.45; }
+    .performance-picker.is-disabled, .game-mode-picker.is-disabled { opacity: .45; }
+    .game-mode-picker { display: block; min-width: 0; margin: 0; padding: 0; border: 0; color: #b6c0b5; }
+    .game-mode-picker legend { margin-bottom: 4px; padding: 0; color: #b6c0b5; font-size: 11px; }
+    .game-mode-picker .mode-options { gap: 4px; }
+    .game-mode-picker .mode-option { flex: 0 0 auto; gap: 5px; padding: 5px 7px; font-size: 11px; white-space: nowrap; }
+    .game-mode-picker .mode-option input { width: 14px; height: 14px; flex-basis: 14px; }
+    .game-mode-picker .mode-option input:checked::after { font-size: 12px; line-height: 14px; }
+    .game-view { display: none; min-height: calc(100vh - 68px); padding: 14px clamp(10px,2vw,24px) 22px; }
+    .game-toolbar { width: min(1440px, 100%); margin: 0 auto 10px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+    .game-title { font-weight: 700; color: #e5ecdf; }
+    .version-control { display: flex; align-items: center; gap: 8px; color: #b6c0b5; font-size: 13px; }
+    .version-control select { min-width: 150px; width: auto; min-height: 38px; }
+    .toolbar-actions { display: flex; align-items: center; gap: 8px; }
+    .small { min-height: 38px; padding: 0 13px; font-size: 13px; }
+    .stage { position: relative; width: min(1440px, 100%); height: min(78vh, calc(100vh - 140px)); min-height: 420px; margin: 0 auto; overflow: hidden; border: 1px solid #ffffff22; border-radius: 11px; background: #080b09; box-shadow: 0 24px 70px #0008; }
+    iframe { display: block; width: 100%; height: 100%; border: 0; background: #000; }
+        .stage.middle iframe { width: 75%; height: 75%; transform: scale(1.3333333333); transform-origin: top left; }
+    .stage.super-low iframe { width: 50%; height: 50%; transform: scale(2); transform-origin: top left; }
+    .loading { position: absolute; inset: 0; z-index: 1; display: grid; place-content: center; gap: 12px; text-align: center; color: #dbe8d3; background: #0b100d; transition: opacity .25s ease; }
+    .loading.done { opacity: 0; pointer-events: none; }
+    .spinner { width: 28px; height: 28px; margin: auto; border: 2px solid #ffffff30; border-top-color: #a9d685; border-radius: 50%; animation: spin .8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (max-width: 760px) {
+      .status { display: none; }
+      .topbar { flex-wrap: wrap; justify-content: center; gap: 8px 16px; padding-top: 10px; padding-bottom: 10px; }
+      .brand { margin-right: auto; }
+      .main-nav { margin-left: auto; }
+      .welcome { padding-top: 30px; padding-bottom: 38px; }
+      .card { grid-template-columns: 1fr; gap: 26px; max-width: 620px; }
+      .intro-copy { text-align: center; }
+      .intro-copy .intro { margin: 0 auto; }
+      .eyebrow { margin: 0 auto; }
+      h1 { font-size: clamp(42px, 12vw, 62px); }
+    }
+    @media (max-width: 600px) {
+      .main-nav { width: 100%; order: 2; }
+      .nav-button { flex: 1; }
+      .content-view { padding-top: 34px; }
+      .server-grid, .legal-grid { grid-template-columns: 1fr; }
+      .request-grid { grid-template-columns: 1fr; }
+      .request-field.full { grid-column: auto; }
+      .legal-callout { grid-column: auto; }
+      .server-banner { min-height: 145px; }
+      .stage { min-height: 360px; height: calc(100vh - 150px); }
+      .game-toolbar { justify-content: flex-start; }
+      .toolbar-actions { margin-left: auto; }
+      .toolbar-actions .small { padding: 0 9px; }
+      .preview-caption { align-items: flex-start; flex-direction: column; gap: 4px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="mark" aria-hidden="true">E</span><span>Eaglercraft</span></div>
+    <nav class="main-nav" aria-label="Main navigation">
+      <button class="nav-button" type="button" data-tab="home" aria-current="page">Play</button>
+      <button class="nav-button" type="button" data-tab="servers">Servers</button>
+      <button class="nav-button" type="button" data-tab="legal">Legal</button>
+    </nav>
+    <div class="status">Runs locally in your browser</div>
+  </header>
+  <main>
+    <section class="welcome" id="welcome">
+      <div class="card">
+        <div class="intro-copy">
+          <div class="eyebrow"><span class="dot"></span> Ready to play</div>
+          <h1>A world awaits.</h1>
+          <p class="intro">Choose a build and preview its artwork, then launch Eaglercraft right here in your browser. Nothing else to install.</p>
+        </div>
+        <div class="selector-panel">
+          <label class="version-picker" for="version">
+            <span>Choose a version</span>
+            <select id="version">
+              <option value="eaglercraft26-3.html">Eaglercraft 26.3</option>
+              <option value="eaglercraft26-2.html">Eaglercraft 26.2</option>
+              <option value="eaglercraft1-12-wasm.html">Eaglercraft 1.12.2 (WASM)</option>
+            </select>
+          </label>
+          <div class="preview" aria-live="polite">
+            <div class="preview-frame"><img id="versionPreview" src="./images/eaglercraft-26-3.png" alt="Minecraft 26.3 update splash artwork"></div>
+            <div class="preview-caption"><span class="preview-title" id="previewTitle">Eaglercraft 26.3</span><span class="preview-description" id="previewDescription">26.3 update</span></div>
+          </div>
+          <div class="actions">
+            <button class="button primary" id="play">▶ <span>Launch game</span></button>
+            <a class="button secondary" id="openStandalone" href="./eaglercraft26-3.html" target="_blank" rel="noopener">Open game separately ↗</a>
+          </div>
+          <fieldset class="performance-picker" id="performancePicker">
+            <legend>Performance mode</legend>
+            <div class="mode-options">
+              <label class="mode-option"><input type="radio" name="renderMode" value="normal"><span>Normal</span></label>
+              <label class="mode-option"><input type="radio" name="renderMode" value="middle" checked><span>Middle</span></label>
+              <label class="mode-option"><input type="radio" name="renderMode" value="super-low"><span>Super low-end</span></label>
+            </div>
+            <small id="performanceNote">Middle renders at 75% size. Super low-end uses half size; Normal uses full size.</small>
+          </fieldset>
+          <div class="note">For the full experience, use a desktop browser.</div>
+        </div>
+      </div>
+    </section>
+    <section class="game-view" id="gameView" aria-label="Eaglercraft game">
+      <div class="game-toolbar">
+        <div class="game-title">Eaglercraft</div>
+        <label class="version-control" for="gameVersion"><span>Version</span>
+          <select id="gameVersion">
+            <option value="eaglercraft26-3.html">26.3</option>
+            <option value="eaglercraft26-2.html">26.2</option>
+            <option value="eaglercraft1-12-wasm.html">1.12 WASM</option>
+          </select>
+        </label>
+        <fieldset class="game-mode-picker" id="gameModePicker">
+          <legend>Performance</legend>
+          <div class="mode-options">
+            <label class="mode-option"><input type="radio" name="renderModeGame" value="normal"><span>Normal</span></label>
+            <label class="mode-option"><input type="radio" name="renderModeGame" value="middle" checked><span>Middle</span></label>
+            <label class="mode-option"><input type="radio" name="renderModeGame" value="super-low"><span>Super low</span></label>
+          </div>
+        </fieldset>
+        <div class="toolbar-actions">
+          <button class="button secondary small" id="fullscreen">⛶ <span>Fullscreen</span></button>
+          <a class="button secondary small" id="openSeparateInGame" href="./eaglercraft26-3.html" target="_blank" rel="noopener">Open separately ↗</a>
+        </div>
+      </div>
+      <div class="stage" id="stage">
+        <div class="loading" id="loading"><span class="spinner"></span><span>Loading game…</span></div>
+        <iframe id="game" title="Eaglercraft" allow="fullscreen; autoplay; gamepad; clipboard-read; clipboard-write; pointer-lock" allowfullscreen></iframe>
+      </div>
+    </section>
+    <section class="content-view" id="serversView" hidden>
+      <div class="page-shell">
+        <div class="page-heading">
+          <div class="eyebrow"><span class="dot"></span> Community servers</div>
+          <h1>Find your next world.</h1>
+          <p>Choose a community and copy its WebSocket address. These original cards take inspiration from your screenshots while using a different layout and artwork.</p>
+        </div>
+        <div class="server-grid">
+          <article class="server-card">
+            <div class="server-banner bagel">
+              <span class="banner-kicker">Community • Survival</span>
+              <div class="banner-wordmark">BAGEL<span>SMP · BUILD TOGETHER</span></div>
+              <span class="banner-stamp" aria-hidden="true">B</span>
+            </div>
+            <div class="server-info">
+              <div class="server-title-row"><h2>Bagel SMP</h2><span class="server-tag ccu">1.5k+ CCU</span></div>
+              <p class="server-description">Join the Bagel SMP community. Server access, rules, and availability are managed by its operators.</p>
+              <span class="address-label">Server address</span>
+              <div class="server-address"><code>wss://esl.bagelsmp.com</code><button class="copy-button" type="button" data-copy="wss://esl.bagelsmp.com">Copy</button></div>
+            </div>
+          </article>
+          <article class="server-card">
+            <div class="server-banner voidsent">
+              <span class="banner-kicker">Community • Daily updates</span>
+              <div class="banner-wordmark">VOIDSENT<span>MC · FIND YOUR FACTION</span></div>
+              <span class="banner-stamp" aria-hidden="true">V</span>
+            </div>
+            <div class="server-info">
+              <div class="server-title-row"><h2>Voidsent MC</h2><span class="server-tag ccu">250+ CCU</span></div>
+              <p class="server-description">Explore PvP, PvE, Factions, and more. The server’s access, rules, and availability are managed by its operators.</p>
+              <span class="address-label">Server address</span>
+              <div class="server-address"><code>wss://mc.voidsent.net</code><button class="copy-button" type="button" data-copy="wss://mc.voidsent.net">Copy</button></div>
+            </div>
+          </article>
+        </div>
+        <p class="server-hint">To connect, launch a compatible game build, open Multiplayer, then add or direct-connect with the copied address. Connection support depends on the selected build and the server.</p>
+        <section class="request-panel" aria-labelledby="requestServerTitle">
+          <h2 id="requestServerTitle">Request a server</h2>
+          <p>Suggest a community server for the list. Include its WebSocket address so it can be checked for compatibility.</p>
+          <form id="serverRequestForm">
+            <div class="request-grid">
+              <label class="request-field">Server name
+                <input name="serverName" type="text" maxlength="80" required placeholder="Example: My SMP">
+              </label>
+              <label class="request-field">WebSocket address
+                <input name="serverAddress" type="text" maxlength="240" pattern="wss://.+" title="Enter a server address that starts with wss://" required placeholder="wss://server.example">
+              </label>
+              <label class="request-field">Supported game versions (optional)
+                <input name="versions" type="text" maxlength="120" placeholder="Example: 1.8.8, 1.12.2, 26.2">
+              </label>
+              <label class="request-field">Website or community link (optional)
+                <input name="website" type="url" maxlength="240" placeholder="https://…">
+              </label>
+              <label class="request-field full">Extra details (optional)
+                <textarea name="details" maxlength="1000" placeholder="What makes this server a good addition?"></textarea>
+              </label>
+            </div>
+            <div class="actions"><button class="button primary" type="submit">✉ <span>Email request</span></button></div>
+          </form>
+          <p class="request-note">This opens a prefilled email to ivar6926@proton.me. Review it and press Send in your email app; nothing is submitted automatically.</p>
+        </section>
+      </div>
+    </section>
+    <section class="content-view" id="legalView" hidden>
+      <div class="page-shell">
+        <div class="page-heading">
+          <div class="eyebrow"><span class="dot"></span> Project information</div>
+          <h1>Legal &amp; ownership.</h1>
+          <p>Clear information about this fan-made launcher, the game content it opens, and the independent servers listed here.</p>
+        </div>
+        <div class="legal-grid">
+          <article class="legal-card">
+            <h2>Unofficial fan project</h2>
+            <p>This launcher is not an official Minecraft product and is not approved by, affiliated with, or supported by Mojang Studios or Microsoft. Minecraft and related marks belong to their respective owners.</p>
+          </article>
+          <article class="legal-card">
+            <h2>Game files and artwork</h2>
+            <p>Game builds and artwork remain the property of their respective rights holders. Confirm you have permission to use, host, or share every included file. The <a href="https://www.minecraft.net/en-us/usage-guidelines" target="_blank" rel="noopener">Minecraft Usage Guidelines</a> restrict redistribution of Minecraft game files and modified versions without permission; this page does not grant any rights.</p>
+          </article>
+          <article class="legal-card">
+            <h2>Independent servers</h2>
+            <p>Voidsent MC and Bagel SMP are third-party services. Their operators control their servers, rules, privacy practices, and availability. Listing them here does not mean they endorse or operate this launcher.</p>
+          </article>
+          <article class="legal-card">
+            <h2>Names and references</h2>
+            <p>Names are used only to identify the selected game builds and community servers. This launcher does not claim ownership of their names, branding, game content, or server artwork.</p>
+          </article>
+          <article class="legal-card legal-callout">
+            <h2>A disclaimer cannot guarantee legal protection</h2>
+            <p>This is general information, not legal advice. A notice alone cannot guarantee that a project avoids legal claims. Before publishing or sharing this launcher, check that you have the required rights and follow the relevant terms and guidelines. If you need advice for your situation, consult a qualified lawyer.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script>
+    const builds = {
+      'eaglercraft26-3.html': { title: 'Eaglercraft 26.3', description: '26.3 update', image: './images/eaglercraft-26-3.png', alt: 'Minecraft 26.3 update splash artwork' },
+      'eaglercraft26-2.html': { title: 'Eaglercraft 26.2', description: 'Java Edition 26.2', image: './images/eaglercraft-26-2.png', alt: 'Minecraft Java Edition 26.2 splash artwork' },
+      'eaglercraft1-12-wasm.html': { title: 'Eaglercraft 1.12.2 (WASM)', description: 'WebAssembly build', image: './images/eaglercraft-1-12.png', alt: 'Minecraft World of Color update artwork for the 1.12.2 WASM build' }
+    };
+    const play = document.getElementById('play');
+    const game = document.getElementById('game');
+    const loading = document.getElementById('loading');
+    const version = document.getElementById('version');
+    const gameVersion = document.getElementById('gameVersion');
+    const preview = document.getElementById('versionPreview');
+    const previewTitle = document.getElementById('previewTitle');
+    const previewDescription = document.getElementById('previewDescription');
+    const stage = document.getElementById('stage');
+    const performancePicker = document.getElementById('performancePicker');
+    const gameModePicker = document.getElementById('gameModePicker');
+    const performanceNote = document.getElementById('performanceNote');
+    const pageModes = Array.from(document.querySelectorAll('input[name="renderMode"]'));
+    const gameModes = Array.from(document.querySelectorAll('input[name="renderModeGame"]'));
+    const standaloneLinks = [document.getElementById('openStandalone'), document.getElementById('openSeparateInGame')];
+    const tabButtons = Array.from(document.querySelectorAll('.nav-button'));
+    const welcome = document.getElementById('welcome');
+    const gameView = document.getElementById('gameView');
+    const serversView = document.getElementById('serversView');
+    const legalView = document.getElementById('legalView');
+    let started = false;
+    game.addEventListener('load', () => { if (game.getAttribute('src')) loading.classList.add('done'); });
+    function selectedMode(options) {
+      return (options.find(option => option.checked) || {}).value || 'middle';
+    }
+    function updatePerformanceMode(filename) {
+      const supported = filename === 'eaglercraft26-2.html' || filename === 'eaglercraft26-3.html';
+      performancePicker.disabled = !supported;
+      gameModePicker.disabled = !supported;
+      performancePicker.classList.toggle('is-disabled', !supported);
+      gameModePicker.classList.toggle('is-disabled', !supported);
+      const mode = selectedMode(pageModes);
+      gameModes.forEach(option => option.checked = option.value === mode);
+      stage.classList.toggle('middle', supported && mode === 'middle');
+      stage.classList.toggle('super-low', supported && mode === 'super-low');
+      performanceNote.textContent = supported
+        ? 'Middle renders at 75% size. Super low-end uses half size; Normal uses full size.'
+        : 'This performance choice applies to 26.2 and 26.3. The 1.12.2 build uses its default rendering size.';
+    }
+    function setPerformanceMode(mode) {
+      pageModes.forEach(option => option.checked = option.value === mode);
+      gameModes.forEach(option => option.checked = option.value === mode);
+      updatePerformanceMode(version.value);
+    }
+    function chooseVersion(filename, reload = false) {
+      const build = builds[filename];
+      if (!build) return;
+      version.value = filename;
+      gameVersion.value = filename;
+      updatePerformanceMode(filename);
+      standaloneLinks.forEach(link => link.href = './' + filename);
+      preview.src = build.image;
+      preview.alt = build.alt;
+      previewTitle.textContent = build.title;
+      previewDescription.textContent = build.description;
+      if (started && reload) {
+        loading.classList.remove('done');
+        game.src = './' + filename;
+      }
+    }
+    version.addEventListener('change', () => chooseVersion(version.value, started));
+    gameVersion.addEventListener('change', () => chooseVersion(gameVersion.value, started));
+    pageModes.forEach(option => option.addEventListener('change', () => setPerformanceMode(option.value)));
+    gameModes.forEach(option => option.addEventListener('change', () => setPerformanceMode(option.value)));
+    chooseVersion(version.value);
+    function showTab(tab) {
+      const onHome = tab === 'home';
+      welcome.style.display = onHome && !started ? 'grid' : 'none';
+      gameView.style.display = onHome && started ? 'block' : 'none';
+      serversView.hidden = tab !== 'servers';
+      legalView.hidden = tab !== 'legal';
+      tabButtons.forEach(button => {
+        if (button.dataset.tab === tab) button.setAttribute('aria-current', 'page');
+        else button.removeAttribute('aria-current');
+      });
+    }
+    tabButtons.forEach(button => button.addEventListener('click', () => showTab(button.dataset.tab)));
+    document.getElementById('serverRequestForm').addEventListener('submit', event => {
+      event.preventDefault();
+      const request = new FormData(event.currentTarget);
+      const serverName = String(request.get('serverName') || '').trim();
+      const serverAddress = String(request.get('serverAddress') || '').trim();
+      const versions = String(request.get('versions') || '').trim();
+      const website = String(request.get('website') || '').trim();
+      const details = String(request.get('details') || '').trim();
+      const subject = 'Server listing request: ' + serverName;
+      const body = [
+        'Please consider adding this server to the launcher.',
+        '',
+        'Server name: ' + serverName,
+        'WebSocket address: ' + serverAddress,
+        'Supported versions: ' + (versions || 'Not specified'),
+        'Website/community: ' + (website || 'Not provided'),
+        '',
+        'Details: ' + (details || 'None provided')
+      ].join('\n');
+      window.location.href = 'mailto:ivar6926@proton.me?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+    });
+    document.querySelectorAll('[data-copy]').forEach(button => button.addEventListener('click', async () => {
+      const address = button.dataset.copy;
+      try {
+        await navigator.clipboard.writeText(address);
+      } catch (_) {
+        const temporary = document.createElement('textarea');
+        temporary.value = address;
+        temporary.style.position = 'fixed';
+        temporary.style.opacity = '0';
+        document.body.appendChild(temporary);
+        temporary.select();
+        document.execCommand('copy');
+        temporary.remove();
+      }
+      const original = button.textContent;
+      button.textContent = 'Copied';
+      window.setTimeout(() => { button.textContent = original; }, 1400);
+    }));
+    play.addEventListener('click', () => {
+      const shouldStart = !started;
+      started = true;
+      showTab('home');
+      if (shouldStart) {
+        game.src = './' + version.value;
+      }
+    });
+    document.getElementById('fullscreen').addEventListener('click', async () => {
+      try {
+        if (!document.fullscreenElement) await stage.requestFullscreen();
+        else await document.exitFullscreen();
+      } catch (_) { game.contentWindow?.focus(); }
+    });
+  </script>
+</body>
+</html>
