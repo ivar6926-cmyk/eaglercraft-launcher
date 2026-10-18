@@ -60,6 +60,7 @@
     .request-field.full { grid-column: 1 / -1; }
     .request-note { margin-top: 12px !important; margin-bottom: 0 !important; color: #839082 !important; font-size: 11px !important; }
     .legal-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .packs-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
     .legal-card { padding: 20px; border: 1px solid #ffffff1c; border-radius: 12px; background: #ffffff06; }
     .legal-card h2 { margin: 0 0 9px; color: #eaf0e6; font-size: 16px; }
     .legal-card p { margin: 0; color: #aebbac; font-size: 13px; line-height: 1.7; }
@@ -137,7 +138,7 @@
       .main-nav { width: 100%; order: 2; }
       .nav-button { flex: 1; }
       .content-view { padding-top: 34px; }
-      .server-grid, .legal-grid { grid-template-columns: 1fr; }
+      .server-grid, .legal-grid, .packs-grid { grid-template-columns: 1fr; }
       .request-grid { grid-template-columns: 1fr; }
       .request-field.full { grid-column: auto; }
       .legal-callout { grid-column: auto; }
@@ -156,6 +157,7 @@
     <nav class="main-nav" aria-label="Main navigation">
       <button class="nav-button" type="button" data-tab="home" aria-current="page">Play</button>
       <button class="nav-button" type="button" data-tab="servers">Servers</button>
+      <button class="nav-button" type="button" data-tab="packs">Packs</button>
       <button class="nav-button" type="button" data-tab="legal">Legal</button>
     </nav>
     <div class="status">Runs locally in your browser</div>
@@ -289,6 +291,36 @@
         </section>
       </div>
     </section>
+    <section class="content-view" id="packsView" hidden>
+      <div class="page-shell">
+        <div class="page-heading">
+          <div class="eyebrow"><span class="dot"></span> Customize your game</div>
+          <h1>Resource packs.</h1>
+          <p>Download packs from their creators' official pages, then load them from the game's Resource Packs menu when your Eaglercraft build supports it.</p>
+        </div>
+        <div class="packs-grid">
+          <article class="legal-card">
+            <div class="server-title-row">
+              <h2>🛡️ Hide Armor</h2>
+              <span class="server-tag">v1.3</span>
+            </div>
+            <p style="margin: 12px 0 18px;">Makes armor visuals transparent so player skins are easier to see while armor stays equipped.</p>
+            <div class="actions" style="margin-top: 0;">
+              <a class="button primary" href="https://cdn.modrinth.com/data/HzbPDpv8/versions/wstU8d3s/%C2%A7d%C2%A7lHide%20Armor%C2%A78%C2%A7o.zip" target="_blank" rel="noopener noreferrer">Download Hide Armor</a>
+              <a class="button secondary" href="https://modrinth.com/resourcepack/hide-armor" target="_blank" rel="noopener noreferrer">View on Modrinth ↗</a>
+            </div>
+            <p class="request-note">This is a Java Edition resource pack. Eaglercraft pack support varies by build; download the ZIP and try importing it in Options → Resource Packs. The pack is hosted by Modrinth and is not copied onto this site.</p>
+          </article>
+          <article class="legal-card">
+            <h2>Looking for more?</h2>
+            <p>Browse resource packs on Modrinth. Check each pack's supported Minecraft versions and license before downloading.</p>
+            <div class="actions">
+              <a class="button secondary" href="https://modrinth.com/resourcepacks" target="_blank" rel="noopener noreferrer">Browse Modrinth packs ↗</a>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
     <section class="content-view" id="legalView" hidden>
       <div class="page-shell">
         <div class="page-heading">
@@ -346,6 +378,7 @@
     const welcome = document.getElementById('welcome');
     const gameView = document.getElementById('gameView');
     const serversView = document.getElementById('serversView');
+    const packsView = document.getElementById('packsView');
     const legalView = document.getElementById('legalView');
     let started = false;
     game.addEventListener('load', () => { if (game.getAttribute('src')) loading.classList.add('done'); });
@@ -397,6 +430,7 @@
       welcome.style.display = onHome && !started ? 'grid' : 'none';
       gameView.style.display = onHome && started ? 'block' : 'none';
       serversView.hidden = tab !== 'servers';
+      packsView.hidden = tab !== 'packs';
       legalView.hidden = tab !== 'legal';
       tabButtons.forEach(button => {
         if (button.dataset.tab === tab) button.setAttribute('aria-current', 'page');
