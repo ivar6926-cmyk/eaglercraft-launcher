@@ -83,6 +83,9 @@
     .preview-caption { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; margin-top: 11px; }
     .preview-title { font-weight: 700; color: #eef3eb; }
     .preview-description { color: #91a08f; font-size: 12px; text-align: right; }
+    .build-note { margin: 12px 0 0; padding: 12px 13px; border: 1px solid #a9d68545; border-radius: 9px; background: #a9d6850c; color: #b8c4b4; font-size: 12px; line-height: 1.6; }
+    .build-note strong { color: #dcebd2; }
+    .build-note .text-link { padding: 0; border: 0; background: none; color: #c2e8a8; font: inherit; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
     .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 19px; }
     .button { min-height: 46px; display: inline-flex; justify-content: center; align-items: center; gap: 9px; border-radius: 8px; padding: 0 16px; text-decoration: none; font-weight: 700; transition: transform .15s ease, background .15s ease, border-color .15s ease; cursor: pointer; }
     .button:hover { transform: translateY(-2px); }
@@ -177,6 +180,7 @@
             <span>Choose a version</span>
             <select id="version">
               <option value="eaglercraft26-3.html">Eaglercraft 26.3</option>
+              <option value="eaglercraft26-3-enhanced">Eaglercraft 26.3 Enhanced setup</option>
               <option value="eaglercraft26-2.html">Eaglercraft 26.2</option>
               <option value="eaglercraft1-12-wasm.html">Eaglercraft 1.12.2 (WASM)</option>
             </select>
@@ -185,6 +189,7 @@
             <div class="preview-frame"><img id="versionPreview" src="./images/eaglercraft-26-3.png" alt="Minecraft 26.3 update splash artwork"></div>
             <div class="preview-caption"><span class="preview-title" id="previewTitle">Eaglercraft 26.3</span><span class="preview-description" id="previewDescription">26.3 update</span></div>
           </div>
+          <p class="build-note" id="enhancedNote" hidden><strong>Enhanced setup:</strong> choose a performance mode below. Hide Armor is a resource pack, not a Java mod; download it from the <button class="text-link" id="openPacksFromEnhanced" type="button">Packs tab</button> and try importing it in-game under Options → Resource Packs. This browser build does not include Fabric or Forge mods.</p>
           <div class="actions">
             <button class="button primary" id="play">▶ <span>Launch game</span></button>
             <a class="button secondary" id="openStandalone" href="./eaglercraft26-3.html" target="_blank" rel="noopener">Open game separately ↗</a>
@@ -208,6 +213,7 @@
         <label class="version-control" for="gameVersion"><span>Version</span>
           <select id="gameVersion">
             <option value="eaglercraft26-3.html">26.3</option>
+            <option value="eaglercraft26-3-enhanced">26.3 Enhanced setup</option>
             <option value="eaglercraft26-2.html">26.2</option>
             <option value="eaglercraft1-12-wasm.html">1.12 WASM</option>
           </select>
@@ -358,9 +364,10 @@
   </main>
   <script>
     const builds = {
-      'eaglercraft26-3.html': { title: 'Eaglercraft 26.3', description: '26.3 update', image: './images/eaglercraft-26-3.png', alt: 'Minecraft 26.3 update splash artwork' },
-      'eaglercraft26-2.html': { title: 'Eaglercraft 26.2', description: 'Java Edition 26.2', image: './images/eaglercraft-26-2.png', alt: 'Minecraft Java Edition 26.2 splash artwork' },
-      'eaglercraft1-12-wasm.html': { title: 'Eaglercraft 1.12.2 (WASM)', description: 'WebAssembly build', image: './images/eaglercraft-1-12.png', alt: 'Minecraft World of Color update artwork for the 1.12.2 WASM build' }
+      'eaglercraft26-3.html': { file: 'eaglercraft26-3.html', title: 'Eaglercraft 26.3', description: '26.3 update', image: './images/eaglercraft-26-3.png', alt: 'Minecraft 26.3 update splash artwork' },
+      'eaglercraft26-3-enhanced': { file: 'eaglercraft26-3.html', title: 'Eaglercraft 26.3 Enhanced setup', description: 'Hide Armor pack + performance modes', image: './images/eaglercraft-26-3.png', alt: 'Minecraft 26.3 update splash artwork' },
+      'eaglercraft26-2.html': { file: 'eaglercraft26-2.html', title: 'Eaglercraft 26.2', description: 'Java Edition 26.2', image: './images/eaglercraft-26-2.png', alt: 'Minecraft Java Edition 26.2 splash artwork' },
+      'eaglercraft1-12-wasm.html': { file: 'eaglercraft1-12-wasm.html', title: 'Eaglercraft 1.12.2 (WASM)', description: 'WebAssembly build', image: './images/eaglercraft-1-12.png', alt: 'Minecraft World of Color update artwork for the 1.12.2 WASM build' }
     };
     const play = document.getElementById('play');
     const game = document.getElementById('game');
@@ -370,6 +377,7 @@
     const preview = document.getElementById('versionPreview');
     const previewTitle = document.getElementById('previewTitle');
     const previewDescription = document.getElementById('previewDescription');
+    const enhancedNote = document.getElementById('enhancedNote');
     const stage = document.getElementById('stage');
     const performancePicker = document.getElementById('performancePicker');
     const gameModePicker = document.getElementById('gameModePicker');
@@ -394,7 +402,8 @@
       return (options.find(option => option.checked) || {}).value || 'middle';
     }
     function updatePerformanceMode(filename) {
-      const supported = filename === 'eaglercraft26-2.html' || filename === 'eaglercraft26-3.html';
+      const clientFile = builds[filename]?.file || filename;
+      const supported = clientFile === 'eaglercraft26-2.html' || clientFile === 'eaglercraft26-3.html';
       performancePicker.disabled = !supported;
       gameModePicker.disabled = !supported;
       performancePicker.classList.toggle('is-disabled', !supported);
@@ -418,14 +427,15 @@
       version.value = filename;
       gameVersion.value = filename;
       updatePerformanceMode(filename);
-      standaloneLinks.forEach(link => link.href = './' + filename);
+      enhancedNote.hidden = filename !== 'eaglercraft26-3-enhanced';
+      standaloneLinks.forEach(link => link.href = './' + build.file);
       preview.src = build.image;
       preview.alt = build.alt;
       previewTitle.textContent = build.title;
       previewDescription.textContent = build.description;
       if (started && reload) {
         loading.classList.remove('done');
-        game.src = './' + filename;
+        game.src = './' + build.file;
       }
     }
     version.addEventListener('change', () => chooseVersion(version.value, started));
@@ -446,6 +456,7 @@
       });
     }
     tabButtons.forEach(button => button.addEventListener('click', () => showTab(button.dataset.tab)));
+    document.getElementById('openPacksFromEnhanced').addEventListener('click', () => showTab('packs'));
     document.getElementById('serverRequestForm').addEventListener('submit', event => {
       event.preventDefault();
       const request = new FormData(event.currentTarget);
@@ -490,7 +501,7 @@
       started = true;
       showTab('home');
       if (shouldStart) {
-        game.src = './' + version.value;
+        game.src = './' + builds[version.value].file;
       }
     });
     document.getElementById('fullscreen').addEventListener('click', async () => {
